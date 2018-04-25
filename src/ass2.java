@@ -106,6 +106,7 @@ public class ass2 {
     }
 
     private static int[] verticalSeam(BufferedImage image, double[][] energyMap) {
+        /*
         int width = image.getWidth();
         int height = image.getHeight();
         double[][] energySum = new double[width][height];
@@ -132,6 +133,55 @@ public class ass2 {
         seam[0] = index;
         for(int i = 1; i < height; i++){
             seam[i] = index; //TODO: after running this should be change to diagonal moves also (2)
+        }
+        return seam;
+        */
+
+        double min;
+        int width = image.getWidth();
+        int height = image.getHeight();
+        double[][] energySum = new double[width][height];
+        for(int i = 0 ; i < width; i++){
+            energySum[i][height - 1] = energyMap[i][height - 1];
+        }
+
+        for(int i = height - 2 ; i >= 0 ; i--){
+            for(int j = 0 ; j < width ; j++){
+                min = energySum[j][i + 1];
+                if(j > 0 && min > energySum[j - 1][i + 1]){
+                    min = energySum[j -1][i + 1];
+                }
+                if(j < width - 1 && min > energySum[j + 1][i + 1]){
+                    min = energySum[j + 1][i + 1];
+                }
+
+                energySum[j][i] = min + energySum[j][i];
+            }
+        }
+
+        double minVal = energySum[0][0];
+        int index = 0;
+        for(int i = 1; i < width; i++){
+            if(minVal > energySum[i][0]){
+                minVal = energySum[i][0];
+                index = i;
+            }
+        }
+
+        int[] seam = new int[height];
+        seam[0] = index;
+        for(int i = 1; i < height; i++){
+            int prevIndex = seam[i - 1];
+            min = energySum[prevIndex][i];
+            index = prevIndex;
+            if(prevIndex > 0 && min > energySum[prevIndex - 1][i]) {
+                min = energySum[prevIndex - 1][i];
+                index = prevIndex - 1;
+            }
+            if(prevIndex < width - 1 && min > energySum[prevIndex + 1][i]) {
+                index = prevIndex + 1;
+            }
+            seam[i] = index;
         }
         return seam;
     }
