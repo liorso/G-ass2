@@ -1,7 +1,7 @@
 import javax.imageio.ImageIO;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 
 /**
  * Created by Lior on 23/04/2018.
@@ -21,21 +21,19 @@ public class ass2 {
         int numOutputColumns = Integer.parseInt(args[1]);
         int numOutputRows = Integer.parseInt(args[2]);
         int energyType = Integer.parseInt(args[3]);
-        String outputName = args[5];
+        String outputName = args[4];
+
+
 
         while(true) {
             double[][] energyMap = calculateEnergyMap(image); //Step 1: calculate energy
             String direction = decideDirection(image, numOutputColumns, numOutputRows);//Step 2: decide direction
             int[] seam;
             if (direction.equals(HORIZONTAL)) {
-                BufferedImage dimg = new BufferedImage(image.getWidth(), image.getHeight(), image.getType());
-                Graphics2D g2d = dimg.createGraphics();
-                g2d.rotate(Math.PI/2, image.getWidth()/2, image.getHeight()/2);
-                seam = verticalSeam(dimg, energyMap);
-                image = verticalRemove(dimg, seam);
-                dimg = new BufferedImage(image.getWidth(), image.getHeight(), image.getType());
-                g2d = dimg.createGraphics();
-                g2d.rotate(-Math.PI/2, image.getWidth()/2, image.getHeight()/2);
+                image = rotateCW(image);
+                seam = verticalSeam(image, energyMap);
+                image = verticalRemove(image, seam);
+                image = rotateCounterCW(image);
             }
             if (direction.equals(VERTICAL)) {
                 seam = verticalSeam(image, energyMap);
@@ -44,9 +42,37 @@ public class ass2 {
             if (direction.equals(DONE)) break;
         }
 
-        ImageIO.write(image, ,outputName);
+        String formatName = outputName.contains(".") ? outputName.substring(outputName.indexOf('.') + 1) : "jpg";
 
+        try {
+            ImageIO.write(image, formatName, new File(outputName));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
+    public static BufferedImage rotateCW(BufferedImage image){
+        int newHeight = image.getWidth();
+        int newWidth = image.getHeight();
+        BufferedImage rotated = new BufferedImage(newWidth, newHeight, image.getType());
+        for(int i = 0 ; i < newWidth; i++){
+            for(int j = 0; j < newHeight ; j++){
+                rotated.setRGB(i, j, image.getRGB(j, newWidth - i - 1));
+            }
+        }
+        return rotated;
+    }
+
+    public static BufferedImage rotateCounterCW(BufferedImage image){
+        int newHeight = image.getWidth();
+        int newWidth = image.getHeight();
+        BufferedImage rotated = new BufferedImage(newWidth, newHeight, image.getType());
+        for(int i = 0 ; i < newWidth; i++){
+            for(int j = 0; j < newHeight ; j++){
+                rotated.setRGB(i, j, image.getRGB(newHeight - j - 1, i));
+            }
+        }
+        return rotated;
     }
 
     private static BufferedImage verticalRemove(BufferedImage image, int[] seam) {
@@ -56,6 +82,7 @@ public class ass2 {
         BufferedImage newImage = new BufferedImage(width - 1, height, image.getType());
         for(int i = 0; i < height ; i++){
             for(int j = 0; j < width ; j++){
+                if(j == seam[i] && j == width - 1) continue;
                 if(j <= seam[i]){//if equal it copy the pixel but next time it is going to be overwrite by else.
                     newImage.setRGB(j, i, image.getRGB(j, i));
                 }
