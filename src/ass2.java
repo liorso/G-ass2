@@ -31,7 +31,8 @@ public class ass2 {
             int[] seam;
             if (direction.equals(HORIZONTAL)) {
                 image = rotateCW(image);
-                seam = verticalSeam(image, energyMap);
+                double[][] transposedEnergyMap = transposeMatrix(energyMap);
+                seam = verticalSeam(image, transposedEnergyMap);
                 image = verticalRemove(image, seam);
                 image = rotateCounterCW(image);
             }
@@ -49,6 +50,16 @@ public class ass2 {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private static double[][] transposeMatrix(double[][] energyMap) {
+        double[][] transposed = new double[energyMap[0].length][energyMap.length];
+        for(int i = 0 ; i < energyMap.length; i++){
+            for(int j = 0 ; j < energyMap[0].length ; j++){
+                transposed[j][i] = energyMap[i][j];
+            }
+        }
+        return transposed;
     }
 
     public static BufferedImage rotateCW(BufferedImage image){
