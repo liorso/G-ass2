@@ -26,7 +26,7 @@ public class ass2 {
 
 
         while(true) {
-            double[][] energyMap = calculateEnergyMap(image); //Step 1: calculate energy
+            double[][] energyMap = calculateEnergyMap(image, energyType); //Step 1: calculate energy
             String direction = decideDirection(image, numOutputColumns, numOutputRows);//Step 2: decide direction
             int[] seam;
             if (direction.equals(HORIZONTAL)) {
@@ -193,21 +193,21 @@ public class ass2 {
         return DONE;
     }
 
-    private static double[][] calculateEnergyMap(BufferedImage image) {
+    private static double[][] calculateEnergyMap(BufferedImage image, int energyType) {
         int height = image.getHeight();
         int width = image.getWidth();
         double[][] energyMap = new double[width][height];
 
         for(int i = 0; i < width; i++){
             for(int j = 0; j < height; j++){
-                energyMap[i][j] = pixelEnergy(image, i, j);
+                energyMap[i][j] = pixelEnergy(image, i, j, energyType);
 
             }
         }
         return energyMap;
     }
 
-    private static double pixelEnergy(BufferedImage image, int x, int y) {
+    private static double pixelEnergy(BufferedImage image, int x, int y, int energyType) {
         int numOfNeighbors = 8;
         int height = image.getHeight();
         int width = image.getWidth();
@@ -226,26 +226,46 @@ public class ass2 {
                         Math.abs((rgb & 0xFF)- (neighborRGB  & 0xFF))) / 3.0;
             }
         }
-        return energy / numOfNeighbors;
+        energy = energy / numOfNeighbors;
+        if(energyType == 1){
+            energy = energy + localEntropy(image, x, y);
+        }
+        return energy;
     }
 
-    //TODO
     private static double localEntropy(BufferedImage image, int x, int y){
-        double gray = 0;
-        for(int i = x-4 ; i <= x + 4; i++){
-            for(int j = y - 4; j <= y + 4; j++){
+        int neighbors = 25;
+        double sum = 0;
+        for(int i = x-2 ; i <= x + 2; i++){
+            for(int j = y - 2; j <= y + 2; j++){
                 if (i < 0 || j < 0 || i >= image.getWidth() || j >= image.getHeight()) {
-                    //TODO: Should we normalize the num of neighbors?
+                    neighbors--;
+                    continue;
                 }
                 else {
-                    gray = gray + grayValue(image, i, j);
+                    double p = pValue(image, i, j);
+                    sum = sum + (p * Math.log(p));
                 }
             }
         }
-        double f = grayValue(image, x, y) / gray;
-        return 0;
+        return - (sum / neighbors);
     }
 
+    private static double pValue(BufferedImage image, int x, int y) {
+        double sum = 0;
+        int neighbors = 25;
+        for(int i = x - 2; i <= x + 2; i++){
+            for(int j = y - 2; j <= y + 2; j++){
+                if(i < 0 || j < 0 || i >= image.getWidth() || j >= image.getHeight()) {
+                    neighbors--;
+                    continue;
+                }
+                sum = sum + grayValue(image, i, j);
+            }
+        }
+        sum = sum / neighbors;
+        return (sum != 0) ? grayValue(image, x, y) / sum : grayValue(image, x, y);
+    }
     private static double grayValue(BufferedImage image, int x, int y){
         int rgb = image.getRGB(x, y);
         int r = (rgb >> 16) & 0xFF;
